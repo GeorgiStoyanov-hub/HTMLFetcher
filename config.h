@@ -2,7 +2,8 @@
 #define CONFIG_H
 
 // HEADER ARGUMENTS vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-#define HEADER_SET_ARG "-HSET"
+#define HEADER_GET_SET_ARG "-GHSET"
+#define HEADER_POST_SET_ARG "-PHSET"
 #define HEADER_IGNORE_ARG "-IGNORE"
 #define HEADER_DEBUG_ARG "-HDEBUG"
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -10,5 +11,6 @@
 #define HEADER_DEFAULT_USER_AGENT "curl/7.79.1"
 #define HEADER_DEFAULT_ACCEPT "*/*"
 #define HEADER_DEFAULT_AUTHORIZATION ""
+#define HEADER_DEFAULT_CONTENT_TYPE "application/json"
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #endif
