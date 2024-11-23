@@ -41,8 +41,9 @@ int main(int argc, char* argv[])
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // SET HEADERS vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    struct curl_slist *headers = NULL; //User Agent, Accept, Authorization
-    if(argc == 4 && strcmp(argv[3], HEADER_SET_ARG) == 0)
+    struct curl_slist *headers = NULL;
+
+    if(argc == 4 && strcmp(argv[3], HEADER_GET_SET_ARG) == 0) //GET HEADERS vvvvvvvvvv
     {
         printf("Custom Headers: Provide in order: User-Agent, Accept Format, Authorization Key >>\n");
         char *_user_agent = NULL, *_accept_format = NULL, *_authorization_key = NULL;
@@ -102,8 +103,8 @@ int main(int argc, char* argv[])
         }
 
         printf("Enter Authorization Key (leave empty for default): ");
-        if(fgets(_authorization_key, _authorization_key_size, stdin) == NULL ||
-            strlen(_authorization_key) == 1)
+        if(fgets(_authorization_key, _authorization_key_size, stdin) == NULL 
+                || strlen(_authorization_key) == 1)
         {
             strcpy(_authorization_key, HEADER_DEFAULT_AUTHORIZATION);
         }
@@ -123,6 +124,36 @@ int main(int argc, char* argv[])
         free(_user_agent);
         free(_accept_format);
         free(_authorization_key);
+    }
+    else if(argc == 4 && strcmp(argv[3], HEADER_POST_SET_ARG) == 0) //POST HEADERS vvvvvvvvvv
+    {   
+        //////////////////////////////////////////////////////
+        //////////////////// CONTENT TYPE ////////////////////
+        printf("Custom Headers: Provide Content-Type (leave empty for default(JSON)) >>\n");
+        char* _content_type = NULL;
+        size_t _content_type_size = 128;
+        _content_type = (char*)malloc(_content_type_size);
+        if(_content_type == NULL)
+        {   
+            fprintf(stderr, "Memory allocation failed for Content-Type!\n");
+            free(_content_type);
+            fclose(fl);
+            curl_easy_cleanup(curl);
+            return EXIT_FAILURE;
+        }
+        if(fgets(_content_type, _content_type_size, stdin) == NULL
+            || strlen(_content_type) == 1 )
+        {
+            strcpy(_content_type, HEADER_DEFAULT_CONTENT_TYPE);
+        }
+        else _content_type[strcspn(_content_type, "\n")] = '\0';
+
+        char _header_content_type[256];
+        snprintf(_header_content_type, sizeof(_header_content_type), "Content-Type: %s", _content_type);
+
+        headers = curl_slist_append(headers, _header_content_type);
+
+        free(_content_type);
     }
     else
     {
@@ -153,8 +184,39 @@ int main(int argc, char* argv[])
                 temp = temp->next;
             }
         }
-        else if(argc == 4 && strcmp(argv[3], HEADER_SET_ARG) == 0)
-        {
+        else if(argc == 4 && strcmp(argv[3], HEADER_GET_SET_ARG) == 0 || argc == 4 && strcmp(argv[3], HEADER_POST_SET_ARG) == 0)
+        {   
+            if(argc == 4 && strcmp(argv[3], HEADER_POST_SET_ARG) == 0)
+            {
+                curl_easy_setopt(curl, CURLOPT_POST, 1L);
+
+                printf("Enter POST data (leave empty for none): ");
+                char* post_data = NULL;
+                size_t post_data_size = 1024;
+                post_data = (char*)malloc(post_data_size);
+                if (post_data == NULL)
+                {
+                    fprintf(stderr, "Memory allocation failed for POST data!\n");
+                    curl_slist_free_all(headers);
+                    fclose(fl);
+                    curl_easy_cleanup(curl);
+                    return EXIT_FAILURE;
+                }
+                if (fgets(post_data, post_data_size, stdin) == NULL || strlen(post_data) == 1)
+                {
+                    printf("No POST data provided, sending empty body.\n");
+                    post_data[0] = '\0';  
+                }
+                else post_data[strcspn(post_data, "\n")] = '\0';  
+
+                
+                curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
+
+                printf("Headers and POST data successfully set.\n");
+                printf("POST Data: %s\n", post_data);
+
+                free(post_data); 
+            }
             printf("Headers succesfully set.\n");
         }
         else if (argc == 4)
@@ -163,12 +225,17 @@ int main(int argc, char* argv[])
             fprintf(stderr, "Valid arguments are:\n");
             fprintf(stderr, "  %s: Ignore SSL verification.\n", HEADER_IGNORE_ARG);
             fprintf(stderr, "  %s: Debug headers.\n", HEADER_DEBUG_ARG);
-            fprintf(stderr, "  %s: Set headers.\n", HEADER_SET_ARG);
+            fprintf(stderr, "  %s: Set GET headers.\n", HEADER_GET_SET_ARG);
+            fprintf(stderr, "  %s: Set POST headers.\n", HEADER_POST_SET_ARG);
             curl_slist_free_all(headers);
             fclose(fl);
             curl_easy_cleanup(curl);
             return EXIT_FAILURE;
         }
+
+        // TESTING STUFF
+
+        ////////////////
 
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, fl);
     printf("Saving to file: %s\n", output);
