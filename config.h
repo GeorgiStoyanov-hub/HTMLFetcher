@@ -13,4 +13,6 @@
 #define HEADER_DEFAULT_AUTHORIZATION ""
 #define HEADER_DEFAULT_CONTENT_TYPE "application/json"
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+#define MIN_ARGS 3
+#define MAX_ARGS 4
 #endif
